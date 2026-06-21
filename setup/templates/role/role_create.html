@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+ {% block extra_css %}
+ {% endblock %}
+
+{% block content %}
+  <div class="">
+    <div class="card card-primary card-outline mb-4">
+      <div class="card-header">
+        <div class="card-title">Add Role</div>
+      </div>
+      <div class="card-body">
+        <form action="{% url 'role_create' %}" class="row row-cols-lg-auto g-3 align-items-center" method="POST">
+          {% csrf_token %}
+          <div class="col-12">
+            <label for="roleName" class="required">Role Name</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="roleName" name="role_name" required/>
+            </div>
+          </div>
+          <div class="col-12" hidden>
+            <label class="" for="inlineSelect">Status</label>
+            <select name="status" class="form-select" id="inlineSelect">
+              <option selected>Choose&hellip;</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content_js %}
+  <script>
+    document.querySelectorAll(".page-name, .sub-page-name").forEach(function(element) {
+        element.innerText = "Role Create";
+    });
+    document.getElementById('testAlertBtn1').addEventListener('click', function () {
+        const imessage = new Message('imessage');
+        imessage.show("This is a test alert at Top Right!", "success", "top-right");
+    });
+  </script>    
+{% endblock %}

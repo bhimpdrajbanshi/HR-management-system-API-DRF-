@@ -1,0 +1,14 @@
+from rest_framework.views import APIView
+from accounts.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+class ProfileAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        return Response({
+            "message": "User profile data",
+            "user": request.user.username
+        })

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+ {% block extra_css %}
+   <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.4.0/dist/css/tabulator_bootstrap5.min.css"
+      crossorigin="anonymous"
+    />
+ {% endblock %}
+
+{% block content %}
+ <div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+        <div class="card-title"> 
+          <button type="submit" id="employeeCreate" class="btn btn-primary">Create</button>
+        </div>
+        <div class="card-tools">
+            <div class="input-group input-group-sm" style="width: 16rem">
+            <span class="input-group-text">
+                <i class="bi bi-search" aria-hidden="true"></i>
+            </span>
+            <input
+                id="table-filter"
+                type="search"
+                class="form-control"
+                placeholder="Filter rows…"
+                aria-label="Filter rows"
+            />
+            </div>
+        </div>
+        </div>
+        <div class="card-body">
+        <div class="d-flex gap-2 mb-3">
+            <button id="export-csv" type="button" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>
+            Export CSV
+            </button>
+            <button id="export-json" type="button" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-filetype-json me-1" aria-hidden="true"></i>
+            Export JSON
+            </button>
+            <button id="print-table" type="button" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-printer me-1" aria-hidden="true"></i>
+            Print
+            </button>
+        </div>
+        <div id="users-table"></div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmation</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    No
+                </button>
+
+                <a href="#"
+                   id="confirmActionBtn"
+                   class="btn btn-danger">
+                    Yes
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+{% block content_js %}
+<script
+      src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.4.0/dist/js/tabulator.min.js"
+      crossorigin="anonymous"
+    ></script>
+
+<script>
+      const statusBadge = (cell) => {
+        const value = cell.getValue();
+        const map = { Active: 'success', Invited: 'info', Suspended: 'secondary' };
+        const color = map[value] || 'secondary';
+        return `<span class="badge text-bg-${color}">${value}</span>`;
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const data = [
+          {% for employee in employees %}
+            {
+                id: "{{ employee.id }}",
+                name: "{{ employee.first_name }} {{ employee.last_name }}",
+                email: "{{employee.user.email}}",
+                status: "{{ employee.status }}",
+                role : "{{ employee.user.role.role_name }}",
+                joined : "{{ employee.created_at }}",
+                action: `
+                  <div class="d-flex gap-2">
+
+                      {% comment %} <a href="/employees/edit/{{ employee.id }}/"
+                        class="btn btn-warning btn-sm">
+                          <i class="bi bi-pencil"></i>
+                      </a> {% endcomment %}
+
+                      <button
+                          class="btn btn-danger btn-sm"
+                          onclick="showConfirmModal(
+                              'Delete this employee?',
+                              '/employees/delete/{{ employee.id }}/'
+                          )">
+                          <i class="bi bi-trash"></i>
+                      </button>
+
+                  </div>
+                `
+            },
+          {% endfor %}
+        ];
+
+        const table = new Tabulator('#users-table', {
+          data: data,
+          layout: 'fitColumns',
+          pagination: true,
+          paginationSize: 10,
+          paginationSizeSelector: [10, 25, 50, 100],
+          movableColumns: true,
+          columns: [
+            { title: '#', field: 'id', width: 60, headerSort: true },
+            { title: 'Name', field: 'name', headerFilter: 'input' },
+            { title: 'Email', field: 'email', headerFilter: 'input' },
+            {
+              title: 'Role',
+              field: 'role',
+              headerFilter: 'list',
+              headerFilterParams: {
+                values: [
+                    "",
+                    {% for role in roles %}
+                    "{{ role.role_name|escapejs }}",
+                    {% endfor %}
+              ]},
+              width: 120,
+            },
+            {
+              title: 'Status',
+              field: 'status',
+              formatter: statusBadge,
+              headerFilter: 'list',
+              headerFilterParams: { values: ['', 'Active', 'Invited', 'Suspended'] },
+              width: 130,
+              hozAlign: 'center',
+            },
+            { title: 'Joined', field: 'joined', sorter: 'date', width: 130 },
+            {
+              title: "Action",
+              field: "action",
+              formatter: "html",
+              hozAlign: "center",
+              width: 150
+            },
+          ],
+        });
+
+        document.getElementById('table-filter').addEventListener('input', (e) => {
+          const value = e.target.value;
+          if (value) {
+            table.setFilter([
+              [
+                { field: 'name', type: 'like', value: value },
+                { field: 'email', type: 'like', value: value },
+              ],
+            ]);
+          } else {
+            table.clearFilter();
+          }
+        });
+
+        document
+          .getElementById('export-csv')
+          .addEventListener('click', () => table.download('csv', 'users.csv'));
+        document
+          .getElementById('export-json')
+          .addEventListener('click', () => table.download('json', 'users.json'));
+        document
+          .getElementById('print-table')
+          .addEventListener('click', () => table.print(false, true));
+      });
+    </script>
+
+    <script>
+      document.getElementById("employeeCreate").addEventListener("click", function () {
+          window.location.href = "{% url 'employees_create' %}";
+      });
+      document.querySelectorAll(".page-name, .sub-page-name").forEach(function(element) {
+          element.innerText = "Employee  List";
+      });
+
+
+
+        function showConfirmModal(message, actionUrl) {
+
+          document.getElementById("confirmMessage").textContent = message;
+
+          document.getElementById("confirmActionBtn").href = actionUrl;
+
+          const modal = new bootstrap.Modal(
+              document.getElementById("confirmModal")
+          );
+
+          modal.show();
+      }
+    </script>
+
+{% endblock %}
