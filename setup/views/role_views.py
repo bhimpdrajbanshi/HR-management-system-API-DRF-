@@ -2,8 +2,9 @@ from django.db import transaction
 from rest_framework.views import APIView
 from django.shortcuts import render
 
-from setup.validation.role.role_validation import validate_role_create
-from accounts.permissions import IsAuthenticated
+from setup.validation import validate_role_create
+from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import IsPermission
 from rest_framework.response import Response
 from rest_framework import status
 from setup.models import Role
@@ -18,7 +19,7 @@ class DepartmentListView(APIView):
 
 class RoleListView(APIView):
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPermission]
 
     def get(self, request):
 
@@ -40,8 +41,9 @@ class RoleListView(APIView):
 
 
 class RoleCreateView(APIView):
+    permission_menu = "Roles"
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPermission]
 
     def post(self, request):
 

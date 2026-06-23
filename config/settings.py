@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     
     # Add Django REST Framework
     'rest_framework', 
+    "drf_spectacular",
     
     # app
     'accounts',
@@ -99,6 +100,8 @@ REST_FRAMEWORK = {
     # Optional pagination
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 
